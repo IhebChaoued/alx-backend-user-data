@@ -10,10 +10,19 @@ import os
 import mysql.connector
 
 
-def filter_datum(fields: List[str], redaction: str, message: str, separator: str) -> str:
+def filter_datum(
+        fields: List[str],
+        redaction: str,
+        message: str,
+        separator: str
+        ) -> str:
     """Obfuscates specified fields in the log message"""
     pattern = '|'.join([f'{field}=.*?{separator}' for field in fields])
-    return re.sub(pattern, lambda m: m.group(0).split('=')[0] + f'={redaction}{separator}', message)
+    return re.sub(
+            pattern,
+            lambda m: m.group(0).split('=')[0] + f'={redaction}{separator}',
+            message
+            )
 
 
 class RedactingFormatter(logging.Formatter):
@@ -30,7 +39,12 @@ class RedactingFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """Format the log record to redact sensitive fields"""
         message = super(RedactingFormatter, self).format(record)
-        return filter_datum(self.fields, self.REDACTION, message, self.SEPARATOR)
+        return filter_datum(
+                self.fields,
+                self.REDACTION,
+                message,
+                self.SEPARATOR
+                )
 
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
@@ -71,8 +85,12 @@ def main() -> None:
     logger = get_logger()
 
     for row in cursor:
-        message = f"name={row[0]}; email={row[1]}; phone={row[2]}; ssn={row[3]}; password={row[4]}; ip={row[5]}; last_login={row[6]}; user_agent={row[7]};"
-        logger.info(message)
+        message = (
+                f"name={row[0]}; email={row[1]}; phone={row[2]}; "
+                f"ssn={row[3]}; password={row[4]}; ip={row[5]}; "
+                f"last_login={row[6]}; user_agent={row[7]};"
+                )
+    logger.info(message)
 
     cursor.close()
     db.close()

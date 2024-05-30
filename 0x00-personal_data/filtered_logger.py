@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Module for filtering log messages
+Module for filtering log messages and connecting to a secure database.
 """
 
 import re
@@ -8,6 +8,7 @@ import logging
 from typing import List
 import os
 import mysql.connector
+from mysql.connector import connection
 
 
 def filter_datum(
@@ -19,10 +20,10 @@ def filter_datum(
     """Obfuscates specified fields in the log message"""
     pattern = '|'.join([f'{field}=.*?{separator}' for field in fields])
     return re.sub(
-            pattern,
-            lambda m: m.group(0).split('=')[0] + f'={redaction}{separator}',
-            message
-            )
+        pattern,
+        lambda m: m.group(0).split('=')[0] + f'={redaction}{separator}',
+        message
+    )
 
 
 class RedactingFormatter(logging.Formatter):
@@ -40,11 +41,11 @@ class RedactingFormatter(logging.Formatter):
         """Format the log record to redact sensitive fields"""
         message = super(RedactingFormatter, self).format(record)
         return filter_datum(
-                self.fields,
-                self.REDACTION,
-                message,
-                self.SEPARATOR
-                )
+            self.fields,
+            self.REDACTION,
+            message,
+            self.SEPARATOR
+        )
 
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
@@ -62,7 +63,7 @@ def get_logger() -> logging.Logger:
     return logger
 
 
-def get_db() -> mysql.connector.connection.MySQLConnection:
+def get_db() -> connection.MySQLConnection:
     """Returns a connection to the database"""
     username = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
     password = os.getenv("PERSONAL_DATA_DB_PASSWORD", "")
@@ -86,11 +87,11 @@ def main() -> None:
 
     for row in cursor:
         message = (
-                f"name={row[0]}; email={row[1]}; phone={row[2]}; "
-                f"ssn={row[3]}; password={row[4]}; ip={row[5]}; "
-                f"last_login={row[6]}; user_agent={row[7]};"
-                )
-    logger.info(message)
+            f"name={row[0]}; email={row[1]}; phone={row[2]}; "
+            f"ssn={row[3]}; password={row[4]}; ip={row[5]}; "
+            f"last_login={row[6]}; user_agent={row[7]};"
+        )
+        logger.info(message)
 
     cursor.close()
     db.close()

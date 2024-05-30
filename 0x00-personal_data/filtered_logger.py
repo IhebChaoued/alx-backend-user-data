@@ -18,10 +18,10 @@ def filter_datum(
         separator: str
         ) -> str:
     """Obfuscates specified fields in the log message"""
-    pattern = '|'.join([f'{field}=.*?{separator}' for field in fields])
+    pattern = '|'.join([f'{field}=[^\\{separator}]*' for field in fields])
     return re.sub(
         pattern,
-        lambda m: m.group(0).split('=')[0] + f'={redaction}{separator}',
+        lambda m: m.group(0).split('=')[0] + f'={redaction}',
         message
     )
 

@@ -15,7 +15,10 @@ CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 auth = None
 AUTH_TYPE = getenv("AUTH_TYPE")
 
-if AUTH_TYPE == "basic_auth":
+if AUTH_TYPE == "session_auth":
+    from api.v1.auth.session_auth import SessionAuth
+    auth = SessionAuth()
+elif AUTH_TYPE == "basic_auth":
     from api.v1.auth.basic_auth import BasicAuth
     auth = BasicAuth()
 else:
@@ -51,17 +54,16 @@ def before_request():
     if auth is None:
         return
     excluded_paths = [
-        '/api/v1/status/',
-        '/api/v1/unauthorized/',
-        '/api/v1/forbidden/'
+        '/api/v1/status/', '/api/v1/unauthorized/', '/api/v1/forbidden/'
     ]
     if not auth.require_auth(request.path, excluded_paths):
         return
     if auth.authorization_header(request) is None:
         abort(401)
-    request.current_user = auth.current_user(request)
-    if request.current_user is None:
+    current_user = auth.current_user(request)
+    if current_user is None:
         abort(403)
+    request.current_user = current_user
 
 
 if __name__ == "__main__":

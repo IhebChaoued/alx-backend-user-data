@@ -12,7 +12,7 @@ from user import Base, User
 
 class DB:
     """DB class to handle database operations."""
-
+    
     def __init__(self) -> None:
         """Initialize a new DB instance."""
         self._engine = create_engine("sqlite:///a.db", echo=True)
@@ -45,3 +45,13 @@ class DB:
             raise NoResultFound(f"No user found with {kwargs}")
         except InvalidRequestError:
             raise InvalidRequestError(f"Invalid query arguments: {kwargs}")
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """Update a user's attributes."""
+        user = self.find_user_by(id=user_id)
+        for key, value in kwargs.items():
+            if not hasattr(user, key):
+                raise ValueError(f"Invalid attribute: {key}")
+            setattr(user, key, value)
+        session = self._session
+        session.commit()

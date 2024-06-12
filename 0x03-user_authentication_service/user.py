@@ -1,34 +1,21 @@
 #!/usr/bin/env python3
 """
-DB module
+User model
 """
-from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from user import Base, User
+
+Base = declarative_base()
 
 
-class DB:
-    """DB class to handle database operations."""
+class User(Base):
+    """
+    User model for a database table named users.
+    """
+    __tablename__ = 'users'
 
-    def __init__(self) -> None:
-        """Initialize a new DB instance."""
-        self._engine = create_engine("sqlite:///a.db", echo=True)
-        Base.metadata.drop_all(self._engine)
-        Base.metadata.create_all(self._engine)
-        self.__session = None
-
-    @property
-    def _session(self):
-        """Memoized session object."""
-        if self.__session is None:
-            DBSession = sessionmaker(bind=self._engine)
-            self.__session = DBSession()
-        return self.__session
-
-    def add_user(self, email: str, hashed_password: str) -> User:
-        """Add a user to the database."""
-        user = User(email=email, hashed_password=hashed_password)
-        self._session.add(user)
-        self._session.commit()
-        return user
+    id = Column(Integer, primary_key=True)
+    email = Column(String(250), nullable=False)
+    hashed_password = Column(String(250), nullable=False)
+    session_id = Column(String(250), nullable=True)
+    reset_token = Column(String(250), nullable=True)
